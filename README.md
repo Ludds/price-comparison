@@ -3,7 +3,7 @@ A script for comparing prices of a product and get notified when it drops in pri
 
 **Disclamer:**
 
-This is my first script in python
+This is my first script in python, and is only a experimental program/script for me to get familiar with the language
 
 **To do:**
 * ~~Fix so the script dosent crash if user enters incorrect mail/password~~
