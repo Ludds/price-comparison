@@ -46,9 +46,29 @@ while searchterm is None:
     if searchterm is None:
         print('That product could not be find, please try again!')
 
-page = requests.get(URL + searchterm, headers=headers)
-soup = BeautifulSoup(page.content, 'html.parser')
-title = soup.find(class_="Title-sc-1i89wok-2 hligmk").get_text()
+
+while True:
+    page = requests.get(URL + searchterm, headers=headers)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    try:
+        title = soup.find(class_="Title-sc-1i89wok-2 hligmk").get_text()
+        break
+    except Exception:
+        print('There was an error with this product, please try another one!')
+        searchterm = None
+        while searchterm is None:
+            prodcut = input('Name of product: ')
+            searchpage = 'https://www.prisjakt.nu/search?search=' + prodcut
+            page = requests.get(searchpage, headers=headers)
+            soup = BeautifulSoup(page.content, 'html.parser')
+            for a in soup.find_all(class_='ProductLink-bvh34t-1 bcUurC', href=True):
+                searchterm = a['href']
+                if not(searchterm is None):
+                    break
+            if searchterm is None:
+                print('That product could not be find, please try again!')
+
+
 
 print("\nFound product: " + title)
 
