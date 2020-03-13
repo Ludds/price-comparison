@@ -1,4 +1,4 @@
-# Web-scrapper
+# price-comparison
 A script for comparing prices of a product and get notified when it drops in price
 
 **Disclamer:**
