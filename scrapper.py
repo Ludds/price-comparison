@@ -5,34 +5,46 @@ import smtplib
 from getpass import getpass
 import sys
 
-
-print('This script will let you search for a product and will kepp track of it and its price\nwhen it dropps in price it will send you and email\nif you dont enter a min price the program will exit after the first drop')
-
-print('Enter an email: ', end='')
-USER = input()
-
-PASS = getpass()
+USER = ''
+PASS = ''
+cheapestprice = sys.maxsize
+counter = 0
+loop = True
+URL = 'https://www.prisjakt.nu'
+searchterm = None
+headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36'}
 s = smtplib.SMTP('smtp-mail.outlook.com',587)
 type(s)
 s.ehlo()
 s.starttls()
-s.login(USER, PASS)
 
-cheapestprice = sys.maxsize
-counter = 0
-loop = True
+print('This script will let you search for a product and will kepp track of it and its price\nwhen it dropps in price it will send you and email\nif you dont enter a min price the program will exit after the first drop')
 
-prodcut = input('Name of product: ')
+while USER == '' or PASS == '':
+    USER = input('Enter an email: ')
+    PASS = getpass()
+    if USER == '' or PASS == '':
+        print('These fields needs to be filled!')
+    else:
+        try:
+            s.login(USER, PASS)
+            break
+        except smtplib.SMTPException:
+            print('Wrong e-mail/password, try again!')
+            USER = ''
+            PASS = ''
 
-URL = 'https://www.prisjakt.nu'
-headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36'}
-searchpage = 'https://www.prisjakt.nu/search?search=' + prodcut
-page = requests.get(searchpage, headers=headers)
-soup = BeautifulSoup(page.content, 'html.parser')
-for a in soup.find_all(class_='ProductLink-bvh34t-1 bcUurC', href=True):
-    searchterm = a['href']
-    if not(searchterm is None):
-        break
+while searchterm is None:
+    prodcut = input('Name of product: ')
+    searchpage = 'https://www.prisjakt.nu/search?search=' + prodcut
+    page = requests.get(searchpage, headers=headers)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    for a in soup.find_all(class_='ProductLink-bvh34t-1 bcUurC', href=True):
+        searchterm = a['href']
+        if not(searchterm is None):
+            break
+    if searchterm is None:
+        print('That product could not be find, please try again!')
 
 page = requests.get(URL + searchterm, headers=headers)
 soup = BeautifulSoup(page.content, 'html.parser')
@@ -40,7 +52,7 @@ title = soup.find(class_="Title-sc-1i89wok-2 hligmk").get_text()
 
 print("\nFound product: " + title)
 
-lowestprice = input('Enter the lowest price (optional):')
+lowestprice = input('Enter the lowest price in kr (optional):')
 if not lowestprice:
     lowestprice = sys.maxsize
 
@@ -65,11 +77,11 @@ while loop:
                 price = temp
 
     counter += 1
-    print("Dagar jämförda: " + str(counter))
+    print("Priser jämförda: " + str(counter))
     
     if cheapestprice > price:
         cheapestprice = price
-        if counter > 1 and price < int(lowestprice):
+        if counter > 1 or price < int(lowestprice):
             for a in soup.find_all(class_='Link-sc-1rysriw-1 hqjkdU', href=True):
                 productURL = a['href']
                 if not(productURL is None): 
@@ -80,7 +92,7 @@ while loop:
             print("\n\nTracking was stopped product has dropped below you lowest price!")    
 
 
-if loop == True:
-    print("Waiting half a day before comparing the prices again!")
-    time.sleep(43200)
+    if loop is True:
+        print("Waiting half a day before comparing the prices again!")
+        time.sleep(43200)
 s.quit()
